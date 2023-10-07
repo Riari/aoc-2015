@@ -4,6 +4,16 @@ use std::hash::Hash;
 #[derive(Debug, PartialEq, Eq, Hash, Clone, Copy)]
 struct Coordinates(i32, i32);
 
+fn apply_direction(c: char, coordinates: &mut Coordinates) {
+    match c {
+        '^' => coordinates.1 += 1,
+        '>' => coordinates.0 += 1,
+        'v' => coordinates.1 -= 1,
+        '<' => coordinates.0 -= 1,
+        _ => panic!("Invalid direction encountered")
+    }
+}
+
 pub fn part_one(input: &str) -> Option<u32> {
     // Create a hashmap of coordinates to count of presents delivered
     let mut map: HashMap<Coordinates, i32> = HashMap::new();
@@ -12,14 +22,7 @@ pub fn part_one(input: &str) -> Option<u32> {
     map.insert(coordinates, 1);
 
     for c in input.chars() {
-        match c {
-            '^' => coordinates.1 += 1,
-            '>' => coordinates.0 += 1,
-            'v' => coordinates.1 -= 1,
-            '<' => coordinates.0 -= 1,
-            _ => panic!("Invalid direction encountered")
-        };
-
+        apply_direction(c, &mut coordinates);
         *map.entry(coordinates).or_insert(0) += 1;
     }
 
@@ -36,22 +39,11 @@ pub fn part_two(input: &str) -> Option<u32> {
     map.insert(Coordinates(0, 0), 2);
 
     for c in input.chars() {
-        // I think this could be optimised as it's copying the coordinates out
-        // on every iteration when I'm sure it could modify them in place
-        let mut coordinates = santas[current_santa];
-
-        match c {
-            '^' => coordinates.1 += 1,
-            '>' => coordinates.0 += 1,
-            'v' => coordinates.1 -= 1,
-            '<' => coordinates.0 -= 1,
-            _ => panic!("Invalid direction encountered")
-        };
-
-        *map.entry(coordinates).or_insert(0) += 1;
-
-        santas[current_santa] = coordinates;
-        current_santa = (current_santa + 1) % 2;
+        if let Some(coordinates) = santas.get_mut(current_santa) {
+            apply_direction(c, coordinates);
+            *map.entry(*coordinates).or_insert(0) += 1;
+            current_santa = (current_santa + 1) % 2;
+        }
     }
 
     Some(map.into_iter().filter(|&(_, value)| value >= 1).count() as u32)
