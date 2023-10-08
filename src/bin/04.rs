@@ -1,20 +1,23 @@
 use md5::Digest;
 
-// TODO: Make this check the bytes directly instead of converting to hex string first
+// I updated this to replace the hex conversion and starts_with check with the byte comparison algo from
+// https://github.com/zargony/advent-of-code-2015/blob/master/src/day04.rs
 fn solve(input: &str, leading_zeroes: usize) -> Option<u32> {
     let mut suffix = 0;
-    let target_prefix = "0".repeat(leading_zeroes);
 
     loop {
         let hash = format!("{}{}", input, suffix);
-        let result = format!("{:x}", md5::Md5::digest(hash));
-        
-        if result.starts_with(&target_prefix) {
-            return Some(suffix);
+        let result: &[u8] = &md5::Md5::digest(hash);
+
+        if result.iter().take(leading_zeroes / 2).all(|b| *b == 0)
+            && (leading_zeroes % 2 == 0 || *result.iter().nth(leading_zeroes / 2).unwrap() < 0x10) {
+            break;
         }
 
         suffix += 1;
     }
+
+    Some(suffix)
 }
 
 pub fn part_one(input: &str) -> Option<u32> {
