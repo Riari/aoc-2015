@@ -1,25 +1,24 @@
 pub fn part_one(input: &str) -> Option<u32> {
     let disallowed = ["ab", "cd", "pq", "xy"];
     let mut nice = 0;
-    for line in input.lines() {
+    'outer: for line in input.lines() {
         let mut vowels = 0;
         let mut contains_double = false;
-        let mut is_disallowed = false;
         for (i, c) in line.chars().enumerate() {
+            if i > 0 && disallowed.contains(&&line[i - 1..=i]) {
+                continue 'outer;
+            }
+
             if c == 'a' || c == 'e' || c == 'i' || c == 'o' || c == 'u' {
                 vowels += 1;
             }
 
-            if i > 0 && line.chars().nth(i - 1) == line.chars().nth(i) {
+            if !contains_double && i > 0 && line.chars().nth(i - 1) == line.chars().nth(i) {
                 contains_double = true;
-            }
-
-            if i > 0 && disallowed.contains(&&line[i - 1..=i]) {
-                is_disallowed = true;
             }
         }
 
-        if vowels >= 3 && contains_double && !is_disallowed {
+        if vowels >= 3 && contains_double {
             nice += 1;
         }
     }
