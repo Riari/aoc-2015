@@ -56,10 +56,11 @@ pub fn part_two(input: &str) -> Option<u32> {
 
             let indices = pairs.get(bytes).unwrap();
             let pair_last_seen_at = indices[indices.len() - 1] as isize;
+            let distance = i as isize - pair_last_seen_at;
             // If this pair overlaps the previous one, the index for the previous one
-            // is invalid, so it needs to be replaced with the current index in order
-            // to continue checking for overlapping pairs.
-            if i as isize - pair_last_seen_at == 1 {
+            // is invalid, so it needs to be removed.
+            if distance == 1 {
+                // Just replace the last index as long as the overlapping continues
                 pairs.entry(bytes.to_vec())
                     .and_modify(|indices| {
                         let last_index = indices.len() - 1;
@@ -67,6 +68,12 @@ pub fn part_two(input: &str) -> Option<u32> {
                     });
                 
                 continue;
+            } else if distance == 2 {
+                // The overlapping has ended, so remove the index of the last overlapping pair
+                pairs.entry(bytes.to_vec())
+                    .and_modify(|indices| {
+                        indices.pop();
+                    });
             }
 
             // If we get this far, we have a valid pair index
