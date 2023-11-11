@@ -1,4 +1,5 @@
 use std::collections::HashMap;
+use std::collections::hash_map::Entry::{Occupied, Vacant}; 
 
 pub fn part_one(input: &str) -> Option<u32> {
     let disallowed = ["ab", "cd", "pq", "xy"];
@@ -48,36 +49,18 @@ pub fn part_two(input: &str) -> Option<u32> {
 
         let mut pairs: HashMap<Vec<u8>, Vec<usize>> = HashMap::new();
         for (i, bytes) in bytes.windows(2).enumerate() {
-            // If the pair hasn't been seen yet, just add it
-            if !pairs.contains_key(bytes) {
-                pairs.insert(bytes.to_vec(), vec![i]);
-                continue;
-            }
+            match pairs.entry(bytes.to_vec()) {
+                Occupied(mut entry) => {
+                    if *entry.get().last().unwrap() == i - 1 {
+                        continue;
+                    }
 
-            let indices = pairs.get(bytes).unwrap();
-            let pair_last_seen_at = indices[indices.len() - 1] as isize;
-            let distance = i as isize - pair_last_seen_at;
-            // If this pair overlaps the previous one, the index for the previous one
-            // is invalid, so it needs to be removed.
-            if distance == 1 {
-                // Just replace the last index as long as the overlapping continues
-                pairs.entry(bytes.to_vec())
-                    .and_modify(|indices| {
-                        let last_index = indices.len() - 1;
-                        let _ = std::mem::replace(&mut indices[last_index], i);
-                    });
-                
-                continue;
-            } else if distance == 2 {
-                // The overlapping has ended, so remove the index of the last overlapping pair
-                pairs.entry(bytes.to_vec())
-                    .and_modify(|indices| {
-                        indices.pop();
-                    });
+                    entry.get_mut().push(i);
+                },
+                Vacant(entry) => {
+                    entry.insert([i].to_vec());
+                }
             }
-
-            // If we get this far, we have a valid pair index
-            pairs.entry(bytes.to_vec()).and_modify(|indices| indices.push(i));
         }
 
         let pairs_seen_twice_or_more = pairs.values().filter(|&v| v.len() >= 2).count() > 0;
