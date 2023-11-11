@@ -31,32 +31,36 @@ pub fn part_one(input: &str) -> Option<u32> {
 pub fn part_two(input: &str) -> Option<u32> {
     let mut nice = 0;
     for line in input.lines() {
-        let mut pairs: HashMap<u8, Vec<usize>> = HashMap::new();
-        let mut repeat = false;
-
         let bytes = line.as_bytes();
 
-        // Pairs
+        let mut repeat = false;
+        for (_, bytes) in bytes.windows(3).enumerate() {
+            if bytes[0] == bytes[2] {
+                repeat = true;
+                break;
+            }
+        }
+
+        if !repeat {
+            // No repeats - skip this line
+            continue;
+        }
+
+        let mut pairs: HashMap<Vec<u8>, Vec<usize>> = HashMap::new();
         for (i, bytes) in bytes.windows(2).enumerate() {
-            // If there's no match, move along
-            if bytes[0] != bytes[1] {
-                continue;
-            }
-
             // If the pair hasn't been seen yet, just add it
-            if !pairs.contains_key(&bytes[0]) {
-                pairs.insert(bytes[0], vec![i]);
+            if !pairs.contains_key(bytes) {
+                pairs.insert(bytes.to_vec(), vec![i]);
                 continue;
             }
 
-            let pair_indices = pairs.get(&bytes[0]).unwrap();
-            let pair_last_seen_at = pair_indices[pair_indices.len() - 1];
+            let indices = pairs.get(bytes).unwrap();
+            let pair_last_seen_at = indices[indices.len() - 1] as isize;
             // If this pair overlaps the previous one, the index for the previous one
             // is invalid, so it needs to be replaced with the current index in order
-            // to continue checking for overlaps (in case of a character being repeated
-            // many times).
-            if i - pair_last_seen_at == 1 {
-                pairs.entry(bytes[0])
+            // to continue checking for overlapping pairs.
+            if i as isize - pair_last_seen_at == 1 {
+                pairs.entry(bytes.to_vec())
                     .and_modify(|indices| {
                         let last_index = indices.len() - 1;
                         let _ = std::mem::replace(&mut indices[last_index], i);
@@ -66,15 +70,7 @@ pub fn part_two(input: &str) -> Option<u32> {
             }
 
             // If we get this far, we have a valid pair index
-            pairs.entry(bytes[0]).and_modify(|indices| indices.push(i));
-        }
-
-        // Repeats
-        for (_, bytes) in bytes.windows(3).enumerate() {
-            if bytes[0] == bytes[2] {
-                repeat = true;
-                break;
-            }
+            pairs.entry(bytes.to_vec()).and_modify(|indices| indices.push(i));
         }
 
         let pairs_seen_twice_or_more = pairs.values().filter(|&v| v.len() >= 2).count() > 0;
@@ -105,6 +101,6 @@ mod tests {
     #[test]
     fn test_part_two() {
         let input = advent_of_code::read_file("examples", 5);
-        assert_eq!(part_two(&input), None);
+        assert_eq!(part_two(&input), Some(2));
     }
 }
