@@ -1,7 +1,26 @@
-pub fn part_one(input: &str) -> Option<u32> {
+fn encode(line: &str, out: &mut String) {
+    out.push('"');
+    for c in line.chars() {
+        if c == '\\' || c == '"' {
+            out.push('\\');
+        }
+        out.push(c);
+    }
+    out.push('"');
+}
+
+fn solve(input: &str, encode_first: bool) -> Option<u32> {
     let mut total: u32 = 0;
 
-    for line in input.lines() {
+    for string in input.lines() {
+        let mut new_line = String::new();
+        let line = if encode_first {
+            encode(string, &mut new_line);
+            new_line.as_str()
+        } else {
+            string
+        };
+
         let code_length: u32 = line.len() as u32;
         let mut string_length: u32 = 0;
 
@@ -48,8 +67,12 @@ pub fn part_one(input: &str) -> Option<u32> {
     Some(total)
 }
 
+pub fn part_one(input: &str) -> Option<u32> {
+    solve(input, false)
+}
+
 pub fn part_two(input: &str) -> Option<u32> {
-    None
+    solve(input, true)
 }
 
 fn main() {
